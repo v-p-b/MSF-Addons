@@ -1,3 +1,11 @@
-ps_autopwn module and add_domainadmin script are based upon the demonstration of Z:
+modules/auxiliary/ps_autopwn
+----------------------------
+A module to try psexec exploit on a range of hosts
+
+scripts/meterpreter/add_domainadmin
+-----------------------------------
+Meterpreter script that tries to add a domain admin on successful session setup
+
+Idea of ps_autopwn module and add_domainadmin scripts are came from the demonstration of Z:
 http://securitytube.net/How-to-own-a-Windows-Domain-video.aspx
 http://www.securitytube.net/How-to-Own-a-Windows-Domain-%28Simple-Version%29-video.aspx
