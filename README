@@ -2,6 +2,12 @@ modules/auxiliary/ps_autopwn
 ----------------------------
 A module to try psexec exploit on a range of hosts
 
+modules/post/multi/gather/dropbox
+---------------------------------
+Downloads Dropbox configuration databases for further use
+
+See: http://dereknewton.com/2011/04/dropbox-authentication-static-host-ids/
+
 scripts/meterpreter/add_domainadmin
 -----------------------------------
 Meterpreter script that tries to add a domain admin on successful session setup
