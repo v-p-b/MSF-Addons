@@ -189,6 +189,8 @@ class Metasploit3 < Msf::Post
 			else
 				return false
 			end
+        when :osx
+            return true # According to Norbert Rittel's comment .dropbox/config.db is 755 on OSX
 		else # unix, bsd, linux, osx
 			ret = whoami
 			if ret =~ /root/
