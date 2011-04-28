@@ -12,6 +12,7 @@ class Metasploit3 < Msf::Post
 			'Description'    => %q{
 			                    This module downloads the Dropbox configuration database from the target system.
                                 The database allows stealth access to the victims Dropbox.
+                                Works before Dropbox 1.2.0.
 
                                 Further info: http://dereknewton.com/2011/04/dropbox-authentication-static-host-ids/
 
@@ -24,6 +25,7 @@ class Metasploit3 < Msf::Post
 			'SessionTypes'   => ['meterpreter', 'shell' ]
 		))
 		#TODO 
+        # - Check Dropbox version
 		# - Dump host_id from SQLite
         # - Test on UNIX-like systems
 	end
